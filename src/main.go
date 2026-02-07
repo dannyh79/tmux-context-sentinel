@@ -24,8 +24,9 @@ func main() {
 		}
 		runDetect(detectCmd.Arg(0))
 	case "list":
+		showIdle := listCmd.Bool("show-idle", false, "Show idle panes as well")
 		listCmd.Parse(os.Args[2:])
-		runList()
+		runList(*showIdle)
 	default:
 		fmt.Println("expected 'detect' or 'list' subcommands")
 		os.Exit(1)
@@ -37,7 +38,7 @@ func runDetect(tty string) {
 	fmt.Println(state)
 }
 
-func runList() {
+func runList(showIdle bool) {
 	panes, err := GetPanes()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error listing panes: %v\n", err)
@@ -53,6 +54,10 @@ func runList() {
 		statusMarker := "IDLE"
 		if state != "IDLE" {
 			statusMarker = "BUSY"
+		}
+
+		if !showIdle && statusMarker == "IDLE" {
+			continue
 		}
 
 		desc := state
