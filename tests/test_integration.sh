@@ -46,23 +46,43 @@ chmod +x "$BIN_DIR/git"
 # Run test
 export PATH="$BIN_DIR:$PATH"
 
-echo "Running ctx list with mocks..."
+echo "Running ctx list (default: busy only)..."
 OUTPUT=$("$BIN_DIR/ctx" list 2>&1)
-echo "Debug Output:"
+echo "Debug Output (Default):"
 echo "$OUTPUT"
 
-# Assertions
+# Assertions for Default
 if echo "$OUTPUT" | grep -q "Gemini (BUSY)"; then
-    echo "PASS: Detected Gemini"
+    echo "PASS: Detected Gemini (Default)"
 else
-    echo "FAIL: Did not detect Gemini"
+    echo "FAIL: Did not detect Gemini (Default)"
     exit 1
 fi
 
 if echo "$OUTPUT" | grep -q "Shell (IDLE)"; then
-    echo "PASS: Detected Idle Shell"
+    echo "FAIL: Detected Idle Shell (Default) - Should be hidden"
+    exit 1
 else
-    echo "FAIL: Did not detect Idle Shell"
+    echo "PASS: Hidden Idle Shell (Default)"
+fi
+
+echo "Running ctx list --show-idle..."
+OUTPUT_ALL=$("$BIN_DIR/ctx" list --show-idle 2>&1)
+echo "Debug Output (All):"
+echo "$OUTPUT_ALL"
+
+# Assertions for Show Idle
+if echo "$OUTPUT_ALL" | grep -q "Gemini (BUSY)"; then
+    echo "PASS: Detected Gemini (Show Idle)"
+else
+    echo "FAIL: Did not detect Gemini (Show Idle)"
+    exit 1
+fi
+
+if echo "$OUTPUT_ALL" | grep -q "Shell (IDLE)"; then
+    echo "PASS: Detected Idle Shell (Show Idle)"
+else
+    echo "FAIL: Did not detect Idle Shell (Show Idle)"
     exit 1
 fi
 
