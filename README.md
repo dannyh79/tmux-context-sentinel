@@ -60,6 +60,19 @@ By default, the Jump Menu hides "idle" panes (panes with no active recognized to
   - The plugin automatically scans panes when you focus them.
   - Status is updated live when you open the menu.
 
+## Status Line Integration
+
+You can display the current context directly in your tmux status bar. The plugin exposes the detected tool and branch via the pane option `@ctx_status`.
+
+To use it, refer to the option using `#{E:@ctx_status}` in your status line configuration.
+
+**Example (.tmux.conf):**
+```tmux
+set -g status-right "Context: #{E:@ctx_status}"
+```
+
+This will dynamically display the detected context (e.g., ` main ⚡ gemini-cli`) for the active pane.
+
 ## Requirements
 
 - Tmux 3.2+ (for popup support)
