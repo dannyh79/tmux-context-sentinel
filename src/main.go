@@ -1,179 +1,90 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
-	"time"
-)
-
-// ContextFile represents the structure of the .ctx file
-type ContextFile struct {
-	Status    string    `json:"status"` // "BUSY", "IDLE"
-	Task      string    `json:"task,omitempty"`
-	StartedAt time.Time `json:"started_at,omitempty"`
-}
-
-const (
-	StatusBusy = "BUSY"
-	StatusIdle = "IDLE"
-	CtxFileName = ".ctx"
 )
 
 func main() {
-	// Subcommands
-	initCmd := flag.NewFlagSet("init", flag.ExitOnError)
-	startCmd := flag.NewFlagSet("start", flag.ExitOnError)
-	stopCmd := flag.NewFlagSet("stop", flag.ExitOnError)
-	statusCmd := flag.NewFlagSet("status", flag.ExitOnError)
-	lsCmd := flag.NewFlagSet("ls", flag.ExitOnError)
+	detectCmd := flag.NewFlagSet("detect", flag.ExitOnError)
+	listCmd := flag.NewFlagSet("list", flag.ExitOnError)
 
 	if len(os.Args) < 2 {
-		fmt.Println("expected 'init', 'start', 'stop', 'status' or 'ls' subcommands")
+		fmt.Println("expected 'detect' or 'list' subcommands")
 		os.Exit(1)
 	}
 
 	switch os.Args[1] {
-	case "init":
-		initCmd.Parse(os.Args[2:])
-		runInit()
-	case "start":
-		startCmd.Parse(os.Args[2:])
-		if startCmd.NArg() < 1 {
-			fmt.Println("start requires a task name")
+	case "detect":
+		detectCmd.Parse(os.Args[2:])
+		if detectCmd.NArg() < 1 {
+			fmt.Println("detect requires a tty path")
 			os.Exit(1)
 		}
-		runStart(startCmd.Arg(0))
-	case "stop":
-		stopCmd.Parse(os.Args[2:])
-		runStop()
-	case "status":
-		statusCmd.Parse(os.Args[2:])
-		runStatus()
-	case "ls":
-		lsCmd.Parse(os.Args[2:])
-		runLs()
+		runDetect(detectCmd.Arg(0))
+	case "list":
+		listCmd.Parse(os.Args[2:])
+		runList()
 	default:
-		fmt.Println("expected 'init', 'start', 'stop', 'status' or 'ls' subcommands")
+		fmt.Println("expected 'detect' or 'list' subcommands")
 		os.Exit(1)
 	}
 }
 
-func getCtxPath() (string, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(wd, CtxFileName), nil
+func runDetect(tty string) {
+	state := DetectState(tty)
+	fmt.Println(state)
 }
 
-func loadCtx() (*ContextFile, error) {
-	path, err := getCtxPath()
+func runList() {
+	panes, err := GetPanes()
 	if err != nil {
-		return nil, err
-	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var ctx ContextFile
-	err = json.Unmarshal(data, &ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &ctx, nil
-}
-
-func saveCtx(ctx *ContextFile) error {
-	path, err := getCtxPath()
-	if err != nil {
-		return err
-	}
-	data, err := json.MarshalIndent(ctx, "", "  ")
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(path, data, 0644)
-}
-
-func runInit() {
-	path, err := getCtxPath()
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error listing panes: %v\n", err)
 		os.Exit(1)
 	}
-	if _, err := os.Stat(path); err == nil {
-		fmt.Println("Context file already exists.")
-		return
-	}
-	ctx := &ContextFile{Status: StatusIdle}
-	if err := saveCtx(ctx); err != nil {
-		fmt.Printf("Error creating .ctx: %v\n", err)
-		os.Exit(1)
-	}
-	fmt.Println("Initialized .ctx file")
-}
 
-func runStart(task string) {
-	ctx, err := loadCtx()
-	if err != nil {
-		if os.IsNotExist(err) {
-			ctx = &ContextFile{} // Create implicit if missing? Requirement says init, but let's be flexible or strict. Strict for now.
-			fmt.Println("Error: .ctx file not found. Run 'init' first.")
-			os.Exit(1)
-		} else {
-			fmt.Printf("Error loading .ctx: %v\n", err)
-			os.Exit(1)
+	for _, p := range panes {
+		branch := GetGitBranch(p.Path)
+		state := DetectState(p.TTY)
+		
+		// Format: [Session:Window:Pane] [Branch] - [Description] (BUSY/IDLE)
+		// We want the output to be easily parseable by fzf and useful for switching.
+		// For switching, we need the target. fzf can return the whole line, we can parse it in shell.
+		
+		// Target ID for tmux switch-client: session:window.pane_index
+		// Actually switch-client takes session, or -t target-pane. 
+		// If we use switch-client -t session:window.pane, it switches.
+		
+		target := fmt.Sprintf("%s:%s.%s", p.Session, p.WindowIndex, p.PaneIndex)
+		
+		// Icon/State logic
+		statusMarker := "IDLE"
+		if state != "IDLE" {
+			statusMarker = "BUSY"
 		}
-	}
-	ctx.Status = StatusBusy
-	ctx.Task = task
-	ctx.StartedAt = time.Now()
-	if err := saveCtx(ctx); err != nil {
-		fmt.Printf("Error saving .ctx: %v\n", err)
-		os.Exit(1)
-	}
-	fmt.Printf("Started task: %s\n", task)
-}
 
-func runStop() {
-	ctx, err := loadCtx()
-	if err != nil {
-		fmt.Printf("Error: %v\n", err) // Likely not initialized
-		return
-	}
-	ctx.Status = StatusIdle
-	ctx.Task = ""
-	if err := saveCtx(ctx); err != nil {
-		fmt.Printf("Error saving .ctx: %v\n", err)
-		os.Exit(1)
-	}
-	fmt.Println("Stopped task")
-}
+		// Description: if BUSY, show tool. If IDLE, show "Shell" or last command? Just "Shell" is fine or empty.
+		desc := state
+		if state == "IDLE" {
+			desc = "Shell"
+		}
 
-func runStatus() {
-	ctx, err := loadCtx()
-	if err != nil {
-		// If no context file, we are neutral/idle effectively
-		return
+		// Pad for alignment? fzf handles it well enough.
+		// Output format:
+		// target | Display String
+		
+		// Let's print a line that fzf shows. We can use --with-nth to hide the target id if we want, 
+		// or just put it at the end/start. 
+		// Best practice: `Display Text...   | target_id` (hidden or extracted)
+		// Or: `target_id: Display Text`
+		
+		fmt.Printf("%-20s [%s] - %s (%s) \t%s\n", 
+			fmt.Sprintf("[%s:%s:%s]", p.Session, p.WindowIndex, p.PaneIndex),
+			branch,
+			desc,
+			statusMarker,
+			target, // Hidden ID column for the script to pick up
+		)
 	}
-	// Output format optimized for shell parsing or direct display
-	// If BUSY, output the task.
-	if ctx.Status == StatusBusy {
-		fmt.Printf("BUSY: %s\n", ctx.Task)
-	} else {
-		fmt.Println("IDLE")
-	}
-}
-
-func runLs() {
-	// Simple listing for now
-	ctx, err := loadCtx()
-	if err != nil {
-		fmt.Println("No context active")
-		return
-	}
-	fmt.Printf("Status: %s\nTask: %s\nStarted: %s\n", ctx.Status, ctx.Task, ctx.StartedAt.Format(time.RFC3339))
 }
