@@ -6,8 +6,9 @@ SCRIPTS_DIR="$CURRENT_DIR/scripts"
 # Compile Go binary if not present (Auto-bootstrap)
 if [ ! -f "$CURRENT_DIR/bin/ctx" ]; then
     mkdir -p "$CURRENT_DIR/bin"
-    echo "Compiling context-sentinel binary..."
+    tmux display-message "Compiling Context Sentinel binary..."
     cd "$CURRENT_DIR/src" && go build -o ../bin/ctx .
+    tmux display-message "Sentinel binary installed at $CURRENT_DIR/bin/ctx"
 fi
 
 # 1. Register Hooks (Requirement 1)

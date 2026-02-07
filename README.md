@@ -32,6 +32,13 @@ set -g @plugin 'danny/tmux-context-sentinel'
 ```
 Press `Prefix` + `I` to install.
 
+### Binary Location
+The core logic runs via a Go binary compiled automatically during installation.
+- **Path**: `~/.tmux/plugins/tmux-context-sentinel/bin/ctx` (if installed via TPM)
+- **Manual Path**: `~/projects/tmux-context-sentinel/bin/ctx` (if cloned manually)
+
+You can add the `bin/` directory to your `PATH` to use the `ctx` command directly in your shell.
+
 ## Usage
 
 - **Jump Menu**: Press your prefix key TWICE (e.g., `C-b C-b`).

@@ -48,43 +48,25 @@ func runList() {
 		branch := GetGitBranch(p.Path)
 		state := DetectState(p.TTY)
 		
-		// Format: [Session:Window:Pane] [Branch] - [Description] (BUSY/IDLE)
-		// We want the output to be easily parseable by fzf and useful for switching.
-		// For switching, we need the target. fzf can return the whole line, we can parse it in shell.
-		
-		// Target ID for tmux switch-client: session:window.pane_index
-		// Actually switch-client takes session, or -t target-pane. 
-		// If we use switch-client -t session:window.pane, it switches.
-		
 		target := fmt.Sprintf("%s:%s.%s", p.Session, p.WindowIndex, p.PaneIndex)
 		
-		// Icon/State logic
 		statusMarker := "IDLE"
 		if state != "IDLE" {
 			statusMarker = "BUSY"
 		}
 
-		// Description: if BUSY, show tool. If IDLE, show "Shell" or last command? Just "Shell" is fine or empty.
 		desc := state
 		if state == "IDLE" {
 			desc = "Shell"
 		}
 
-		// Pad for alignment? fzf handles it well enough.
-		// Output format:
-		// target | Display String
-		
-		// Let's print a line that fzf shows. We can use --with-nth to hide the target id if we want, 
-		// or just put it at the end/start. 
-		// Best practice: `Display Text...   | target_id` (hidden or extracted)
-		// Or: `target_id: Display Text`
-		
-		fmt.Printf("%-20s [%s] - %s (%s) \t%s\n", 
-			fmt.Sprintf("[%s:%s:%s]", p.Session, p.WindowIndex, p.PaneIndex),
+		// The user wants clean context: [Branch] - [Description] (BUSY/IDLE)
+		// We add the target ID at the end separated by a delimiter for fzf parsing.
+		fmt.Printf("[%s] - %s (%s) ||| %s\n", 
 			branch,
 			desc,
 			statusMarker,
-			target, // Hidden ID column for the script to pick up
+			target,
 		)
 	}
 }
