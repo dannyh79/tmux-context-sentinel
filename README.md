@@ -1,40 +1,59 @@
-# tmux-context-sentinel
+# Tmux Context Sentinel
 
-A lightweight, offline-first Tmux plugin to guard your context.
+**Context Sentinel** is a precision tool for Tmux that detects what you are working on. It identifies active AI agents and CLI tools in your panes and provides a "Jump Menu" to switch contexts instantly.
 
 ## Features
-- **Pure Tmux**: No shell config edits required.
-- **Resource Light**: Core logic in a fast Go binary.
-- **Context Guard**: Warns you if you enter a "BUSY" directory context.
+
+- **Surgical AI Detection**: Uses process tree analysis to identify active tools (no file-based status tracking).
+- **Supports**: `gemini-cli`, `kiro-cli`, `cursor-cli`, `aider`.
+- **Zero Config**: Works out of the box with standard process names.
+- **Jump Menu**: Press `Prefix` + `Prefix` to open a popup menu.
+  - Lists all panes with Git Branch and Active Tool.
+  - Shows `BUSY` / `IDLE` status.
+  - Fuzzy search to jump to any context.
 
 ## Installation
 
-Add to your TPM list in `.tmux.conf`:
+### Manual
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/danny/tmux-context-sentinel ~/.tmux/plugins/tmux-context-sentinel
+   ```
+2. Add this line to your `~/.tmux.conf`:
+   ```tmux
+   run-shell ~/.tmux/plugins/tmux-context-sentinel/context-sentinel.tmux
+   ```
+3. Reload tmux (`tmux source ~/.tmux.conf`).
 
+### TPM (Tmux Plugin Manager)
+Add this to your `~/.tmux.conf`:
 ```tmux
-set -g @plugin 'dannyh79/tmux-context-sentinel'
+set -g @plugin 'danny/tmux-context-sentinel'
 ```
-
-Then press `prefix` + `I` to install.
+Press `Prefix` + `I` to install.
 
 ## Usage
 
-1. **Initialize a context** in a project root:
-   ```bash
-   ~/path/to/plugin/bin/ctx init
-   ```
-   *(You might want to symlink `ctx` to your path for easier access)*
+- **Jump Menu**: Press your prefix key TWICE (e.g., `C-b C-b`).
+  - A popup will appear listing all panes.
+  - Select a pane to switch to it.
+  - The list shows: `[Branch] - [Tool Name] (BUSY/IDLE)`.
 
-2. **Start a task**:
-   ```bash
-   ctx start "Refactoring API"
-   ```
+- **Automatic Detection**:
+  - The plugin automatically scans panes when you focus them.
+  - Status is updated live when you open the menu.
 
-3. **Tmux Behavior**:
-   - When you focus a pane in this directory, Tmux will display a warning: `⚠️ Context Sentinel: BUSY on 'Refactoring API'`.
-   - You can add `#{E:@context_sentinel_status}` to your `status-right` or `status-left` in `.tmux.conf` to see persistent status.
+## Requirements
 
-4. **Stop a task**:
-   ```bash
-   ctx stop
-   ```
+- Tmux 3.2+ (for popup support)
+- Go (to build the binary, happens automatically on first run)
+- `fzf` (required for the menu)
+
+## Development
+
+- **Build**: `cd src && go build -o ../bin/ctx .`
+- **Test**: `go test ./src/...` and `./tests/test_integration.sh`
+
+## License
+
+MIT
