@@ -15,3 +15,7 @@ STATE=$("$BIN" detect "$PANE_TTY")
 
 # Set tmux option (user option @ctx_status)
 tmux set-option -p -t "$PANE_ID" @ctx_status "$STATE"
+
+# Update global summary
+SUMMARY=$("$BIN" summary)
+tmux set-option -g @ctx_summary "$SUMMARY"
