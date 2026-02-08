@@ -2,56 +2,64 @@ package main
 
 import "testing"
 
-func TestDetectStateFromProcs(t *testing.T) {
+func TestDetectStatusFromProcs(t *testing.T) {
 	tests := []struct {
 		name     string
 		procs    []Process
-		expected string
+		expected AgentStatus
 	}{
 		{
 			name: "Idle Shell",
 			procs: []Process{
-				{Command: "-zsh"},
-				{Command: "tmux a"},
+				{Command: "-zsh", State: "S"},
+				{Command: "tmux a", State: "S"},
 			},
-			expected: "IDLE",
+			expected: AgentStatus{Name: "IDLE", IsBusy: false},
 		},
 		{
-			name: "Aider Running",
+			name: "Aider Running (Idle)",
 			procs: []Process{
-				{Command: "-zsh"},
-				{Command: "python3 -m aider"},
+				{Command: "-zsh", State: "S"},
+				{Command: "python3 -m aider", State: "S"},
 			},
-			expected: "Aider",
+			expected: AgentStatus{Name: "Aider", IsBusy: false},
+		},
+		{
+			name: "Aider Running (Busy)",
+			procs: []Process{
+				{Command: "-zsh", State: "S"},
+				{Command: "python3 -m aider", State: "R"},
+			},
+			expected: AgentStatus{Name: "Aider", IsBusy: true},
 		},
 		{
 			name: "Gemini CLI",
 			procs: []Process{
-				{Command: "node /usr/local/bin/gemini"},
+				{Command: "node /usr/local/bin/gemini", State: "S"},
 			},
-			expected: "Gemini",
+			expected: AgentStatus{Name: "Gemini", IsBusy: false},
 		},
 		{
-			name: "Kiro CLI",
+			name: "Kiro CLI (Busy)",
 			procs: []Process{
-				{Command: "/bin/kiro"},
+				{Command: "/bin/kiro", State: "R+"},
 			},
-			expected: "Kiro",
+			expected: AgentStatus{Name: "Kiro", IsBusy: true},
 		},
 		{
 			name: "Cursor CLI",
 			procs: []Process{
-				{Command: "cursor"},
+				{Command: "cursor", State: "S"},
 			},
-			expected: "Cursor",
+			expected: AgentStatus{Name: "Cursor", IsBusy: false},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := detectStateFromProcs(tt.procs)
+			got := detectStatusFromProcs(tt.procs)
 			if got != tt.expected {
-				t.Errorf("expected %s, got %s", tt.expected, got)
+				t.Errorf("expected %+v, got %+v", tt.expected, got)
 			}
 		})
 	}
