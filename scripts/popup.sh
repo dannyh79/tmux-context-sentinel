@@ -10,8 +10,7 @@ if command -v fzf-tmux >/dev/null 2>&1; then
 fi
 
 # Run list, pipe to fzf, switch client
-# Format: Display Text \t TargetID
-# We use tab delimiter.
+# Format: Display Text ||| TargetID
 "$BIN" list | \
-$FZF_CMD --delimiter='\t' --with-nth=1 --reverse --header="Select Pane to Switch" \
+$FZF_CMD --delimiter=' \|\|\| ' --with-nth=1 --reverse --header="Select Pane to Switch" \
     --bind 'enter:execute(tmux switch-client -t {2})+accept'
