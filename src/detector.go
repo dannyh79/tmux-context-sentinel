@@ -10,42 +10,62 @@ import (
 type Process struct {
 	PID     string
 	PPID    string
+	State   string
 	Command string
+}
+
+// AgentStatus represents the detected agent and its status
+type AgentStatus struct {
+	Name   string
+	IsBusy bool
 }
 
 // DetectState returns the detected tool name or "IDLE"
 func DetectState(tty string) string {
-	procs, err := getProcessesOnTTY(tty)
-	if err != nil {
-		return "IDLE"
-	}
-	return detectStateFromProcs(procs)
+	status := DetectAgentStatus(tty)
+	return status.Name
 }
 
-func detectStateFromProcs(procs []Process) string {
+// DetectAgentStatus returns the agent name and whether it is busy
+func DetectAgentStatus(tty string) AgentStatus {
+	procs, err := getProcessesOnTTY(tty)
+	if err != nil {
+		return AgentStatus{Name: "IDLE", IsBusy: false}
+	}
+	return detectStatusFromProcs(procs)
+}
+
+func detectStatusFromProcs(procs []Process) AgentStatus {
 	for _, p := range procs {
 		cmd := strings.ToLower(p.Command)
 		
+		var name string
 		// Signatures
 		if strings.Contains(cmd, "aider") {
-			return "Aider"
+			name = "Aider"
+		} else if strings.Contains(cmd, "gemini") { // gemini-cli
+			name = "Gemini"
+		} else if strings.Contains(cmd, "kiro") { // kiro-cli
+			name = "Kiro"
+		} else if strings.Contains(cmd, "cursor") { // cursor-cli
+			name = "Cursor"
 		}
-		if strings.Contains(cmd, "gemini") { // gemini-cli
-			return "Gemini"
-		}
-		if strings.Contains(cmd, "kiro") { // kiro-cli
-			return "Kiro"
-		}
-		if strings.Contains(cmd, "cursor") { // cursor-cli
-			return "Cursor"
+
+		if name != "" {
+			// Check if busy (R state usually implies running/processing)
+			// S = Sleeping, R = Running, D = Uninterruptible, Z = Zombie, T = Stopped
+			// On macOS, state can include +, etc. We look for 'R'.
+			isBusy := strings.Contains(p.State, "R") || strings.Contains(p.State, "D") || strings.Contains(p.State, "U")
+			
+			return AgentStatus{Name: name, IsBusy: isBusy}
 		}
 	}
-	return "IDLE"
+	return AgentStatus{Name: "IDLE", IsBusy: false}
 }
 
 func getProcessesOnTTY(tty string) ([]Process, error) {
-	// ps -t <tty> -o pid,ppid,command
-	cmd := exec.Command("ps", "-t", tty, "-o", "pid,ppid,command")
+	// ps -t <tty> -o pid,ppid,state,command
+	cmd := exec.Command("ps", "-t", tty, "-o", "pid,ppid,state,command")
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, err
@@ -61,19 +81,20 @@ func getProcessesOnTTY(tty string) ([]Process, error) {
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		parts := strings.Fields(line)
-		if len(parts) < 3 {
+		if len(parts) < 4 {
 			continue
 		}
-		// PID is parts[0], PPID is parts[1], Command is remainder
-		// But wait, command can have spaces.
+		// PID is parts[0], PPID is parts[1], State is parts[2], Command is remainder
 		// parts[0] = PID
 		// parts[1] = PPID
-		// parts[2:] = Command parts
+		// parts[2] = State
+		// parts[3:] = Command parts
 		
 		p := Process{
 			PID:     parts[0],
 			PPID:    parts[1],
-			Command: strings.Join(parts[2:], " "),
+			State:   parts[2],
+			Command: strings.Join(parts[3:], " "),
 		}
 		procs = append(procs, p)
 	}
