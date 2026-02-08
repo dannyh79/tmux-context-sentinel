@@ -9,9 +9,10 @@ import (
 func main() {
 	detectCmd := flag.NewFlagSet("detect", flag.ExitOnError)
 	listCmd := flag.NewFlagSet("list", flag.ExitOnError)
+	summaryCmd := flag.NewFlagSet("summary", flag.ExitOnError)
 
 	if len(os.Args) < 2 {
-		fmt.Println("expected 'detect' or 'list' subcommands")
+		fmt.Println("expected 'detect', 'list', or 'summary' subcommands")
 		os.Exit(1)
 	}
 
@@ -27,8 +28,11 @@ func main() {
 		showIdle := listCmd.Bool("show-idle", false, "Show idle panes as well")
 		listCmd.Parse(os.Args[2:])
 		runList(*showIdle)
+	case "summary":
+		summaryCmd.Parse(os.Args[2:])
+		runSummary()
 	default:
-		fmt.Println("expected 'detect' or 'list' subcommands")
+		fmt.Println("expected 'detect', 'list', or 'summary' subcommands")
 		os.Exit(1)
 	}
 }
@@ -36,6 +40,31 @@ func main() {
 func runDetect(tty string) {
 	state := DetectState(tty)
 	fmt.Println(state)
+}
+
+func runSummary() {
+	panes, err := GetPanes()
+	if err != nil {
+		// Silently fail or empty string for status bar safety
+		return
+	}
+
+	totalAI := 0
+	busyAI := 0
+
+	for _, p := range panes {
+		status := DetectAgentStatus(p.TTY)
+		if status.Name != "IDLE" {
+			totalAI++
+			if status.IsBusy {
+				busyAI++
+			}
+		}
+	}
+
+	if totalAI > 0 {
+		fmt.Printf("[busy AI: %d/%d]", busyAI, totalAI)
+	}
 }
 
 func runList(showIdle bool) {
