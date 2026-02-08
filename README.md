@@ -73,6 +73,16 @@ set -g status-right "Context: #{E:@ctx_status}"
 
 This will dynamically display the detected context (e.g., ` main ⚡ gemini-cli`) for the active pane.
 
+### Global Status Counter
+
+You can also display a global summary of all active AI agents across your session (e.g., `[busy AI: 1/3]`). This is stored in the global variable `@ctx_summary`.
+
+**Example (.tmux.conf):**
+```tmux
+set -g status-left "#{E:@ctx_summary} "
+```
+This updates automatically as you switch panes.
+
 ## Requirements
 
 - Tmux 3.2+ (for popup support)
