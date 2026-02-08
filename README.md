@@ -39,6 +39,16 @@ The core logic runs via a Go binary compiled automatically during installation.
 
 You can add the `bin/` directory to your `PATH` to use the `ctx` command directly in your shell.
 
+## Configuration
+
+### Jump Menu Behavior
+By default, the Jump Menu hides "idle" panes (panes with no active recognized tool) to reduce clutter.
+
+- **Show Idle Panes**: To show all panes including idle ones, set this variable to `1`.
+  ```tmux
+  set -g @ctx_show_idle '1'  # Default: 0
+  ```
+
 ## Usage
 
 - **Jump Menu**: Press your prefix key TWICE (e.g., `C-b C-b`).
