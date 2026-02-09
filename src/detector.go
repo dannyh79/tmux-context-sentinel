@@ -38,7 +38,7 @@ func DetectAgentStatus(tty string) AgentStatus {
 func detectStatusFromProcs(procs []Process) AgentStatus {
 	for _, p := range procs {
 		cmd := strings.ToLower(p.Command)
-		
+
 		var name string
 		// Signatures
 		if strings.Contains(cmd, "aider") {
@@ -56,7 +56,7 @@ func detectStatusFromProcs(procs []Process) AgentStatus {
 			// S = Sleeping, R = Running, D = Uninterruptible, Z = Zombie, T = Stopped
 			// On macOS, state can include +, etc. We look for 'R'.
 			isBusy := strings.Contains(p.State, "R") || strings.Contains(p.State, "D") || strings.Contains(p.State, "U")
-			
+
 			return AgentStatus{Name: name, IsBusy: isBusy}
 		}
 	}
@@ -89,7 +89,7 @@ func getProcessesOnTTY(tty string) ([]Process, error) {
 		// parts[1] = PPID
 		// parts[2] = State
 		// parts[3:] = Command parts
-		
+
 		p := Process{
 			PID:     parts[0],
 			PPID:    parts[1],

@@ -19,7 +19,7 @@ type GlobalState struct {
 }
 
 var (
-	stateMutex sync.Mutex
+	stateMutex      sync.Mutex
 	CustomStatePath string // For testing
 )
 
@@ -100,26 +100,26 @@ func UpdateAgentState(tty string, status string, agent string) error {
 }
 
 func PruneState(activeTTYs []string) error {
-    state, err := LoadState()
-    if err != nil {
-        return err
-    }
-    
-    activeMap := make(map[string]bool)
-    for _, t := range activeTTYs {
-        activeMap[t] = true
-    }
-    
-    dirty := false
-    for tty := range state.Panes {
-        if !activeMap[tty] {
-            delete(state.Panes, tty)
-            dirty = true
-        }
-    }
-    
-    if dirty {
-        return SaveState(state)
-    }
-    return nil
+	state, err := LoadState()
+	if err != nil {
+		return err
+	}
+
+	activeMap := make(map[string]bool)
+	for _, t := range activeTTYs {
+		activeMap[t] = true
+	}
+
+	dirty := false
+	for tty := range state.Panes {
+		if !activeMap[tty] {
+			delete(state.Panes, tty)
+			dirty = true
+		}
+	}
+
+	if dirty {
+		return SaveState(state)
+	}
+	return nil
 }
