@@ -16,8 +16,20 @@ if [ "$SHOW_IDLE" = "1" ]; then
     FLAGS="--show-idle"
 fi
 
-# Run list, pipe to fzf, switch client
+# Run list, pipe to fzf, capture output
 # Format: Display Text ||| TargetID
-"$BIN" list $FLAGS | \
-$FZF_CMD --delimiter=' \|\|\| ' --with-nth=1 --reverse --header="Select Pane to Switch" \
-    --bind 'enter:execute(tmux switch-client -t {2})+accept'
+SELECTED=$("$BIN" list $FLAGS | \
+    $FZF_CMD --delimiter=' \|\|\| ' --with-nth=1 --reverse --header="Select Pane to Switch")
+
+# Check if selection was made
+if [ -z "$SELECTED" ]; then
+    exit 0
+fi
+
+# Extract TargetID (column 2)
+TARGET_ID=$(echo "$SELECTED" | awk -F ' \\|\\|\\| ' '{print $2}')
+
+# Switch client if ID is valid
+if [ -n "$TARGET_ID" ]; then
+    tmux switch-client -t "$TARGET_ID"
+fi
