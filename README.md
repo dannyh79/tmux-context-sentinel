@@ -89,6 +89,62 @@ This updates automatically as you switch panes.
 - Go (to build the binary, happens automatically on first run)
 - `fzf` (required for the menu)
 
+## User Guide: Agent Integrations
+
+For the most accurate status tracking, configure your AI agents to signal their state directly to Context Sentinel. This enables the `[busy AI: X/Y]` counter to work flawlessly without relying on polling.
+
+Ensure `ctx` is in your `PATH` or use the absolute path (e.g., `~/.tmux/plugins/tmux-context-sentinel/bin/ctx`).
+
+### 1. Gemini CLI
+
+Add the following to your `~/.gemini/settings.json` (or project-level `.gemini/settings.json`):
+
+```json
+{
+  "hooks": {
+    "BeforeAgent": [
+       { 
+         "matcher": "*", 
+         "hooks": [{ "command": "ctx signal --status running --agent Gemini", "type": "command" }] 
+       }
+    ],
+    "AfterAgent": [
+       { 
+         "matcher": "*", 
+         "hooks": [{ "command": "ctx signal --status waiting --agent Gemini", "type": "command" }] 
+       }
+    ]
+  }
+}
+```
+
+### 2. Claude Code
+
+Add the following to your `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [{ "command": "ctx signal --status running --agent Claude", "type": "command" }]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{ "command": "ctx signal --status waiting --agent Claude", "type": "command" }]
+      }
+    ]
+  }
+}
+```
+
+### 3. Kiro CLI
+
+Refer to the Kiro CLI documentation for hook configuration. You can use the generic commands:
+- **Start**: `ctx signal --status running --agent Kiro`
+- **End**: `ctx signal --status waiting --agent Kiro`
+
 ## Development
 
 - **Build**: `cd src && go build -o ../bin/ctx .`
