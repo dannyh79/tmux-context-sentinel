@@ -31,7 +31,9 @@ func getPanesSafe() ([]Pane, error) {
 	var panes []Pane
 	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
 	for _, line := range lines {
-		if line == "" { continue }
+		if line == "" {
+			continue
+		}
 		parts := strings.Split(line, delim)
 		if len(parts) < 7 {
 			continue
@@ -59,7 +61,7 @@ func GetGitBranch(path string) string {
 }
 
 func SwitchToPane(target string) error {
-	// target format: session:window.pane or similar. 
+	// target format: session:window.pane or similar.
 	// We usually use -t target
 	return exec.Command("tmux", "switch-client", "-t", target).Run()
 }

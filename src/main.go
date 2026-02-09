@@ -69,8 +69,12 @@ func runSignal(status, agent string) {
 	if status != "running" && status != "waiting" {
 		// Allow synonyms if needed, or strict?
 		// "busy" -> "running"?
-		if status == "busy" { status = "running" }
-		if status == "idle" { status = "waiting" }
+		if status == "busy" {
+			status = "running"
+		}
+		if status == "idle" {
+			status = "waiting"
+		}
 	}
 
 	err = UpdateAgentState(tty, status, agent)
@@ -112,7 +116,7 @@ func runSummary() {
 	// OR we could try to auto-detect mixed usage.
 	// Requirement: "Overall Status Counter... [busy AI: 2/5]"
 	// If we rely purely on signals, we iterate the state map.
-	
+
 	for _, s := range state.Panes {
 		totalAI++
 		if s.Status == "running" {
@@ -137,10 +141,10 @@ func runList(showIdle bool) {
 
 	for _, p := range panes {
 		branch := GetGitBranch(p.Path)
-		
+
 		// Priority: Signal State > Detect State
 		var statusMarker, desc string
-		
+
 		if s, ok := state.Panes[p.TTY]; ok {
 			desc = s.Agent
 			if s.Status == "running" {
@@ -158,9 +162,9 @@ func runList(showIdle bool) {
 				statusMarker = "IDLE"
 			}
 		}
-		
+
 		target := fmt.Sprintf("%s:%s.%s", p.Session, p.WindowIndex, p.PaneIndex)
-		
+
 		if !showIdle && statusMarker == "IDLE" {
 			continue
 		}
@@ -169,7 +173,7 @@ func runList(showIdle bool) {
 			desc = "Shell"
 		}
 
-		fmt.Printf("[%s] - %s (%s) ||| %s\n", 
+		fmt.Printf("[%s] - %s (%s) ||| %s\n",
 			branch,
 			desc,
 			statusMarker,
