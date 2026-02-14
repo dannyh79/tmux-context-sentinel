@@ -7,7 +7,12 @@ This repository implements a Tmux plugin that detects and reports the status of 
 ### Go (Core Logic)
 The core logic resides in `src/`.
 
-- **Build Binary**:
+- **Install from Source**:
+  Builds the binary and installs it to the local tmux plugin directory.
+  ```bash
+  ./install.sh
+  ```
+- **Build Binary Only**:
   ```bash
   cd src && go build -o ../bin/ctx .
   ```

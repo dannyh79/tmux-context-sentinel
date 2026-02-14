@@ -17,7 +17,7 @@
 ### Manual
 1. Clone the repository:
    ```bash
-   git clone https://github.com/danny/tmux-context-sentinel ~/.tmux/plugins/tmux-context-sentinel
+   git clone https://github.com/dannyh79/tmux-context-sentinel ~/.tmux/plugins/tmux-context-sentinel
    ```
 2. Add this line to your `~/.tmux.conf`:
    ```tmux
@@ -28,9 +28,15 @@
 ### TPM (Tmux Plugin Manager)
 Add this to your `~/.tmux.conf`:
 ```tmux
-set -g @plugin 'danny/tmux-context-sentinel'
+set -g @plugin 'dannyh79/tmux-context-sentinel'
 ```
 Press `Prefix` + `I` to install.
+
+### Install from Source (GitHub)
+If you prefer to install the latest version directly from source:
+```bash
+curl -fsSL https://raw.githubusercontent.com/dannyh79/tmux-context-sentinel/main/install.sh | bash
+```
 
 ### Binary Location
 The core logic runs via a Go binary compiled automatically during installation.
@@ -158,6 +164,25 @@ Ensure `ctx` is in your `PATH`, or use the absolute path (e.g., `~/.tmux/plugins
 
 - **Build**: `cd src && go build -o ../bin/ctx .`
 - **Test**: `go test ./src/...` and `./tests/test_integration.sh`
+
+### Rapid Testing with Tmux
+
+To quickly test changes or install from source:
+
+1.  **Run the Install Script**:
+    This builds the binary, installs it to `~/.tmux/plugins/tmux-context-sentinel`, and reloads the plugin.
+    ```bash
+    ./install.sh
+    ```
+
+2.  **Verify Detection**:
+    ```bash
+    # Replace /dev/ttysXXX with the target pane's TTY
+    ./bin/ctx detect /dev/ttys001
+    ```
+
+3.  **Test the Menu**:
+    Press your prefix key twice (e.g., `C-b C-b`) to see the updated popup.
 
 ## License
 
