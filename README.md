@@ -5,7 +5,7 @@
 ## Features
 
 - **Surgical AI Detection**: Uses process tree analysis to identify active tools (no file-based status tracking).
-- **Supports**: `gemini-cli`, `kiro-cli`, `cursor-cli`, `aider`.
+- **Supports**: `gemini-cli`, `kiro-cli`, `cursor-cli`, `aider`, `opencode`.
 - **Zero Config**: Works out of the box with standard process names.
 - **Jump Menu**: Press `Prefix` + `Prefix` to open a popup menu.
   - Lists all panes with Git Branch and Active Tool.
@@ -144,6 +144,15 @@ Add the following to your `~/.claude/settings.json`:
 Refer to the Kiro CLI documentation for hook configuration. You can use the generic commands:
 - **Start**: `ctx signal --status running --agent Kiro`
 - **End**: `ctx signal --status waiting --agent Kiro`
+
+### 4. OpenCode
+
+To use Context Sentinel with OpenCode, configure the `ctx` binary as a hook or plugin in your settings.
+
+- **Start Command**: `ctx signal --status running --agent OpenCode`
+- **End Command**: `ctx signal --status waiting --agent OpenCode`
+
+Ensure `ctx` is in your `PATH`, or use the absolute path (e.g., `~/.tmux/plugins/tmux-context-sentinel/bin/ctx`).
 
 ## Development
 

@@ -53,6 +53,13 @@ func TestDetectStatusFromProcs(t *testing.T) {
 			},
 			expected: AgentStatus{Name: "Cursor", IsBusy: false},
 		},
+		{
+			name: "OpenCode CLI",
+			procs: []Process{
+				{Command: "opencode run", State: "R"},
+			},
+			expected: AgentStatus{Name: "OpenCode", IsBusy: true},
+		},
 	}
 
 	for _, tt := range tests {

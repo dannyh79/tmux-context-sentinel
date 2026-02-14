@@ -49,6 +49,8 @@ func detectStatusFromProcs(procs []Process) AgentStatus {
 			name = "Kiro"
 		} else if strings.Contains(cmd, "cursor") { // cursor-cli
 			name = "Cursor"
+		} else if strings.Contains(cmd, "opencode") {
+			name = "OpenCode"
 		}
 
 		if name != "" {
