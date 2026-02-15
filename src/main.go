@@ -37,12 +37,13 @@ func main() {
 	case "signal":
 		status := signalCmd.String("status", "", "Status: running|waiting")
 		agent := signalCmd.String("agent", "unknown", "Agent name")
+		tty := signalCmd.String("tty", "", "Explicit TTY (optional, defaults to current)")
 		signalCmd.Parse(os.Args[2:])
 		if *status == "" {
 			fmt.Println("signal requires --status <running|waiting>")
 			os.Exit(1)
 		}
-		runSignal(*status, *agent)
+		runSignal(*status, *agent, *tty)
 	default:
 		fmt.Println("expected 'detect', 'list', 'summary', or 'signal' subcommands")
 		os.Exit(1)
@@ -57,11 +58,18 @@ func runDetect(tty string) {
 	fmt.Println(state)
 }
 
-func runSignal(status, agent string) {
-	tty, err := getSelfTTY()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error detecting TTY: %v\n", err)
-		os.Exit(1)
+func runSignal(status, agent, explicitTTY string) {
+	var tty string
+	var err error
+
+	if explicitTTY != "" {
+		tty = explicitTTY
+	} else {
+		tty, err = getSelfTTY()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error detecting TTY: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	// Normalize status

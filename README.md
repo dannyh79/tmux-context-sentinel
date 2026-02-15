@@ -147,16 +147,49 @@ Add the following to your `~/.claude/settings.json`:
 
 ### 3. Kiro CLI
 
-Refer to the Kiro CLI documentation for hook configuration. You can use the generic commands:
-- **Start**: `ctx signal --status running --agent Kiro`
-- **End**: `ctx signal --status waiting --agent Kiro`
+Configure hooks using the Kiro UI (Command Palette: `Kiro: Open Kiro Hook UI`):
+
+1.  **Running Status**:
+    - **Trigger**: Prompt Submit
+    - **Action**: Shell Command
+    - **Command**: `ctx signal --status running --agent Kiro`
+
+2.  **Waiting Status**:
+    - **Trigger**: Agent Turn Completion (or Agent Stop)
+    - **Action**: Shell Command
+    - **Command**: `ctx signal --status waiting --agent Kiro`
 
 ### 4. OpenCode
 
-To use Context Sentinel with OpenCode, configure the `ctx` binary as a hook or plugin in your settings.
+1. Create a plugin file at `~/.config/opencode/plugins/tmux-context.js` (global) or `.opencode/plugins/tmux-context.js` (project):
 
-- **Start Command**: `ctx signal --status running --agent OpenCode`
-- **End Command**: `ctx signal --status waiting --agent OpenCode`
+```javascript
+export const TmuxContextPlugin = async ({ client, $ }) => {
+  return {
+    events: {
+      "session.created": async () => {
+        await $`ctx signal --status running --agent OpenCode`;
+      },
+      "session.idle": async () => {
+        await $`ctx signal --status waiting --agent OpenCode`;
+      },
+      "session.error": async () => {
+        await $`ctx signal --status waiting --agent OpenCode`;
+      },
+    },
+  };
+};
+```
+
+2. Activate the plugin in your `~/.config/opencode/opencode.json` (or project config):
+
+```json
+{
+  "plugin": [
+    "./plugins/tmux-context.js"
+  ]
+}
+```
 
 Ensure `ctx` is in your `PATH`, or use the absolute path (e.g., `~/.tmux/plugins/tmux-context-sentinel/bin/ctx`).
 
